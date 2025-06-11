@@ -4,7 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthServices {
   final _auth = FirebaseAuth.instance;
-  Future<User?> createUserWithEmailAndPasword(
+
+  Future<User?> createUserWithEmailAndPassword(
     String email,
     String password,
   ) async {
@@ -14,13 +15,16 @@ class AuthServices {
         password: password,
       );
       return cred.user;
+    } on FirebaseAuthException catch (e) {
+      log('Firebase Auth Error: ${e.code} - ${e.message}');
+      rethrow;
     } catch (e) {
-      log('Something went wrong');
+      log('Auth Error: $e');
+      rethrow;
     }
-    return null;
   }
 
-  Future<User?> loginUserWithEmailAndPasword(
+  Future<User?> loginUserWithEmailAndPassword(
     String email,
     String password,
   ) async {
@@ -30,17 +34,21 @@ class AuthServices {
         password: password,
       );
       return cred.user;
+    } on FirebaseAuthException catch (e) {
+      log('Firebase Auth Error: ${e.code} - ${e.message}');
+      rethrow;
     } catch (e) {
-      log('Something went wrong');
+      log('Auth Error: $e');
+      rethrow;
     }
-    return null;
   }
 
   Future<void> signOut() async {
     try {
       await _auth.signOut();
     } catch (e) {
-      log('Something went wrong');
+      log('Sign out error: $e');
+      rethrow;
     }
   }
 
@@ -49,7 +57,10 @@ class AuthServices {
       await _auth.sendPasswordResetEmail(email: email);
       return "Mail sent";
     } on FirebaseAuthException catch (e) {
-      return e.message.toString();
+      return e.message ?? "An error occurred";
     }
   }
+
+  User? get currentUser => _auth.currentUser;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 }
