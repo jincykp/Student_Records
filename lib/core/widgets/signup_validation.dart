@@ -16,11 +16,8 @@ class SignUpValidator {
     if (value == null || value.trim().isEmpty) {
       return 'Password is required';
     }
-    final passwordRegex = RegExp(
-      r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
-    );
-    if (!passwordRegex.hasMatch(value)) {
-      return 'Password must be at least 8 characters,\ninclude uppercase, lowercase, number and symbol';
+    if (value.trim().length < 8) {
+      return 'Password must be at least 8 characters long';
     }
     return null;
   }

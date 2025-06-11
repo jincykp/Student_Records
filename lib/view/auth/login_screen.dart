@@ -1,20 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:studentrecords/core/constants/color_constants.dart';
 import 'package:studentrecords/core/constants/text_styles.dart';
 import 'package:studentrecords/core/widgets/sign_buttons.dart';
 import 'package:studentrecords/core/widgets/signup_formfileds.dart';
+import 'package:studentrecords/core/widgets/signup_validation.dart';
+import 'package:studentrecords/provider/auth_provider.dart';
+
+import 'package:studentrecords/view/auth/forgotpw.dart';
 import 'package:studentrecords/view/auth/reg_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+import 'package:studentrecords/view/home_screen.dart';
+
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool obscurePassword = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _showSnackBar(String message, {bool isError = true}) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle_outline,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message)),
+        ],
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      duration: const Duration(seconds: 3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      await authProvider.login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (mounted) {
+        if (authProvider.state == AuthState.success) {
+          _showSnackBar('Login successful!', isError: false);
+          // Navigate to home screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ), // Replace with your home screen
+          );
+        } else if (authProvider.state == AuthState.error) {
+          _showSnackBar(authProvider.errorMessage);
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -50,6 +118,7 @@ class LoginScreen extends StatelessWidget {
                       controller: emailController,
                       hintText: 'Email',
                       keyBoardType: TextInputType.emailAddress,
+                      validator: SignUpValidator.validateEmail,
                       prefixIcon: const Icon(
                         Icons.email,
                         color: Colors.white70,
@@ -60,16 +129,22 @@ class LoginScreen extends StatelessWidget {
                     SignUpFormFields(
                       controller: passwordController,
                       hintText: 'Password',
-                      inputFormatters: [LengthLimitingTextInputFormatter(6)],
+                      inputFormatters: [LengthLimitingTextInputFormatter(8)],
                       keyBoardType: TextInputType.visiblePassword,
+                      validator: SignUpValidator.validatePassword,
+                      obscureText: obscurePassword,
                       prefixIcon: const Icon(Icons.lock, color: Colors.white70),
                       suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.visibility_off,
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Colors.white70,
                         ),
                         onPressed: () {
-                          // UI only - no functionality
+                          setState(() {
+                            obscurePassword = !obscurePassword;
+                          });
                         },
                       ),
                     ),
@@ -79,7 +154,13 @@ class LoginScreen extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // UI only - no functionality
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => const ForgotPasswordScreen(),
+                            ),
+                          );
                         },
                         child: const Text(
                           'Forgot Password?',
@@ -89,14 +170,18 @@ class LoginScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomButton(
-                        text: 'Login',
-                        onPressed: () {
-                          // UI only - no functionality
-                        },
-                      ),
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, child) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            text: 'Login',
+                            isLoading: authProvider.isLoading,
+                            onPressed:
+                                authProvider.isLoading ? null : _handleLogin,
+                          ),
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 20),
@@ -109,10 +194,10 @@ class LoginScreen extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SignUpScreen(),
+                                builder: (context) => const SignUpScreen(),
                               ),
                             );
                           },

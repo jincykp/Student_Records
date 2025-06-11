@@ -6,6 +6,11 @@ import 'package:studentrecords/core/constants/text_styles.dart';
 import 'package:studentrecords/core/widgets/sign_buttons.dart';
 import 'package:studentrecords/core/widgets/signup_formfileds.dart';
 import 'package:studentrecords/core/widgets/signup_validation.dart';
+import 'package:studentrecords/provider/auth_provider.dart';
+
+import 'package:studentrecords/view/auth/login_screen.dart';
+
+import 'package:studentrecords/view/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -15,14 +20,56 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool obscurePassword = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _showSnackBar(String message, {bool isError = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _handleSignUp() async {
+    if (_formKey.currentState!.validate()) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      await authProvider.signUp(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (mounted) {
+        if (authProvider.state == AuthState.success) {
+          _showSnackBar('Account created successfully!', isError: false);
+          // Navigate to home screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ), // Replace with your home screen
+          );
+        } else if (authProvider.state == AuthState.error) {
+          _showSnackBar(authProvider.errorMessage);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Controllers for form fields (UI only)
-
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-
-    final _formKey = GlobalKey<FormState>();
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -68,32 +115,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: passwordController,
                     hintText: 'Password',
                     keyBoardType: TextInputType.visiblePassword,
-                    inputFormatters: [LengthLimitingTextInputFormatter(6)],
+                    inputFormatters: [LengthLimitingTextInputFormatter(8)],
                     prefixIcon: const Icon(Icons.lock, color: Colors.white70),
-                    suffixIcon: const Icon(
-                      Icons.visibility,
-                      color: Colors.white70,
-                    ),
                     validator: SignUpValidator.validatePassword,
+                    obscureText: obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(height: 10),
 
                   // Sign Up Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: 'Sign Up',
-                      onPressed: () {
-                        // UI only - no functionality
-                      },
-                    ),
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          text: 'Sign Up',
+                          isLoading: authProvider.isLoading,
+                          onPressed:
+                              authProvider.isLoading ? null : _handleSignUp,
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 10),
 
                   // Already have an account? Login
                   TextButton(
                     onPressed: () {
-                      // UI only - no functionality
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
                     },
                     child: const Text(
                       'Already have an account? Log in',

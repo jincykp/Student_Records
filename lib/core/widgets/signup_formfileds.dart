@@ -9,6 +9,7 @@ class SignUpFormFields extends StatelessWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final bool readOnly;
+  final bool obscureText;
   final TextInputType? keyBoardType;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
@@ -26,6 +27,7 @@ class SignUpFormFields extends StatelessWidget {
     this.textInputAction = TextInputAction.next,
     this.readOnly = false,
     this.toolbarOptions,
+    this.obscureText = false,
   });
 
   @override
@@ -34,6 +36,7 @@ class SignUpFormFields extends StatelessWidget {
       keyboardType: keyBoardType,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       controller: controller,
+      obscureText: obscureText,
       textInputAction: textInputAction,
       style: const TextStyle(color: AllColors.textColor),
 
