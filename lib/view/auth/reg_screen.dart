@@ -7,9 +7,7 @@ import 'package:studentrecords/core/widgets/sign_buttons.dart';
 import 'package:studentrecords/core/widgets/signup_formfileds.dart';
 import 'package:studentrecords/core/widgets/signup_validation.dart';
 import 'package:studentrecords/provider/auth_provider.dart';
-
 import 'package:studentrecords/view/auth/login_screen.dart';
-
 import 'package:studentrecords/view/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -133,7 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
                   // Sign Up Button
                   Consumer<AuthProvider>(
@@ -149,22 +147,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
                   // Already have an account? Login
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Already have an account?',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      );
-                    },
-                    child: const Text(
-                      'Already have an account? Log in',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
