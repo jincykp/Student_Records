@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:provider/provider.dart'; // Add this import
 import 'package:studentrecords/core/constants/color_constants.dart';
 import 'package:studentrecords/core/widgets/sign_buttons.dart';
 import 'package:studentrecords/core/widgets/signup_formfileds.dart';
 import 'package:studentrecords/core/widgets/signup_validation.dart';
 import 'package:studentrecords/data/model/student_model.dart';
+import 'package:studentrecords/provider/student_provider.dart'; // Add this import
 import 'package:flutter/services.dart';
 
 class AddStudentScreen extends StatefulWidget {
@@ -40,16 +41,20 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       });
 
       try {
-        final box = Hive.box<StudentModel>('students');
+        final studentProvider = Provider.of<StudentProvider>(
+          context,
+          listen: false,
+        );
 
-        final existingStudent = box.values.firstWhere(
+        // Check if registration number already exists
+        final existingStudents = studentProvider.students;
+        final regNoExists = existingStudents.any(
           (student) =>
               student.regNo.toLowerCase() ==
               _regNoController.text.trim().toLowerCase(),
-          orElse: () => StudentModel(name: '', age: 0, regNo: '', phone: ''),
         );
 
-        if (existingStudent.regNo.isNotEmpty) {
+        if (regNoExists) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -71,7 +76,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
           phone: _phoneController.text.trim(),
         );
 
-        await box.add(student);
+        // Use the provider to add the student
+        await studentProvider.addStudent(student);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -163,14 +169,12 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const SizedBox(height: 20),
-
                           const SizedBox(height: 30),
                           SignUpFormFields(
                             controller: _nameController,
                             hintText: "Student Name",
                             validator: SignUpValidator.validateName,
                             prefixIcon: const Icon(Icons.person),
-                            // enabled: !_isLoading,
                           ),
                           const SizedBox(height: 15),
                           SignUpFormFields(
@@ -179,9 +183,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                             keyBoardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(
-                                2,
-                              ), // Limit to 2 digits
+                              LengthLimitingTextInputFormatter(2),
                             ],
                             validator: SignUpValidator.validateAge,
                             prefixIcon: const Icon(Icons.cake),
@@ -205,9 +207,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                             keyBoardType: TextInputType.phone,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(
-                                10,
-                              ), // Limit to 10 digits
+                              LengthLimitingTextInputFormatter(10),
                             ],
                             validator: SignUpValidator.validatePhone,
                             prefixIcon: const Icon(Icons.phone),
@@ -224,7 +224,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                               vertical: 15,
                             ),
                           ),
-
                           const SizedBox(height: 20),
                         ],
                       ),

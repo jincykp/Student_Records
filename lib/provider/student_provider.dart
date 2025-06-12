@@ -9,7 +9,7 @@ class StudentProvider with ChangeNotifier {
   List<StudentModel> get students => _students;
 
   StudentProvider() {
-    print('StudentProvider init, box contains: ${_studentBox.values.length}');
+    print('✪ StudentProvider init, box contains: ${_studentBox.values.length}');
     loadStudents();
   }
 
@@ -26,8 +26,65 @@ class StudentProvider with ChangeNotifier {
   }
 
   Future<void> updateStudent(int index, StudentModel updatedStudent) async {
-    await _studentBox.putAt(index, updatedStudent);
-    loadStudents();
+    try {
+      // First, ensure we have the latest data
+      loadStudents();
+
+      // Get the actual key from the box at this index position
+      final keys = _studentBox.keys.toList();
+      print('Available keys: $keys, trying to update index: $index');
+
+      if (index >= 0 && index < keys.length) {
+        final key = keys[index];
+        await _studentBox.put(key, updatedStudent);
+        print('updateStudent: Updated student at index $index with key $key');
+
+        // Reload students to ensure UI consistency
+        loadStudents();
+      } else {
+        print(
+          'Index out of range: $index, available indices: 0-${keys.length - 1}',
+        );
+        throw Exception('Index out of range: $index');
+      }
+    } catch (e) {
+      print('Error updating student: $e');
+      throw e;
+    }
+  }
+
+  // Alternative method: Update by finding the student first
+  Future<void> updateStudentSafe(
+    StudentModel originalStudent,
+    StudentModel updatedStudent,
+  ) async {
+    try {
+      // Find the key by comparing the original student data
+      dynamic keyToUpdate;
+
+      for (var key in _studentBox.keys) {
+        final student = _studentBox.get(key);
+        if (student != null &&
+            student.regNo == originalStudent.regNo &&
+            student.name == originalStudent.name &&
+            student.phone == originalStudent.phone &&
+            student.age == originalStudent.age) {
+          keyToUpdate = key;
+          break;
+        }
+      }
+
+      if (keyToUpdate != null) {
+        await _studentBox.put(keyToUpdate, updatedStudent);
+        print('updateStudentSafe: Updated student with key $keyToUpdate');
+        loadStudents();
+      } else {
+        throw Exception('Student not found in database');
+      }
+    } catch (e) {
+      print('Error updating student safely: $e');
+      throw e;
+    }
   }
 
   Future<void> deleteStudent(int index) async {

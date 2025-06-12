@@ -5,35 +5,50 @@ class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
-  final EdgeInsetsGeometry? padding; // New parameter
-  final double textSize; // New parameter
-  final double borderRadius; // New parameter
+  final EdgeInsetsGeometry? padding;
+  final double textSize;
+  final double borderRadius;
+  final Color? backgroundColor; // New parameter for custom color
+  final Color? textColor; // New parameter for custom text color
+  final bool isOutlined; // New parameter for outlined style
 
   const CustomButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.isLoading = false,
-    this.padding, // Optional parameter
-    this.textSize = 18, // Default to original size
-    this.borderRadius = 20, // Default to original radius
+    this.padding,
+    this.textSize = 18,
+    this.borderRadius = 20,
+    this.backgroundColor,
+    this.textColor,
+    this.isOutlined = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    print("Button build called. isLoading: $isLoading, text: $text");
+    final defaultBackgroundColor = backgroundColor ?? AllColors.primaryColor;
+    final defaultTextColor = textColor ?? AllColors.textColor;
+
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            isLoading
-                ? AllColors.primaryColor.withOpacity(0.7)
-                : AllColors.primaryColor,
+            isOutlined
+                ? Colors.transparent
+                : (isLoading
+                    ? defaultBackgroundColor.withOpacity(0.7)
+                    : defaultBackgroundColor),
         padding:
             padding ?? const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
+          side:
+              isOutlined
+                  ? BorderSide(color: defaultBackgroundColor, width: 2)
+                  : BorderSide.none,
         ),
+        elevation: isOutlined ? 0 : null,
       ),
       child:
           isLoading
@@ -42,10 +57,10 @@ class CustomButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: textSize, // Scale the spinner according to text size
+                    width: textSize,
                     height: textSize,
-                    child: const CircularProgressIndicator(
-                      color: AllColors.textColor,
+                    child: CircularProgressIndicator(
+                      color: defaultTextColor,
                       strokeWidth: 2,
                     ),
                   ),
@@ -55,7 +70,7 @@ class CustomButton extends StatelessWidget {
                     style: TextStyle(
                       fontSize: textSize,
                       fontWeight: FontWeight.bold,
-                      color: AllColors.textColor,
+                      color: defaultTextColor,
                     ),
                   ),
                 ],
@@ -65,7 +80,7 @@ class CustomButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: textSize,
                   fontWeight: FontWeight.bold,
-                  color: AllColors.textColor,
+                  color: isOutlined ? defaultBackgroundColor : defaultTextColor,
                 ),
               ),
     );

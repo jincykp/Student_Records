@@ -1,181 +1,424 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Add this import for SystemNavigator
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:studentrecords/core/constants/color_constants.dart';
+
+import 'package:studentrecords/core/widgets/dialogue_utilites.dart';
 import 'package:studentrecords/provider/auth_provider.dart';
 import 'package:studentrecords/provider/student_provider.dart';
 import 'package:studentrecords/view/add_student_screen.dart';
+import 'package:studentrecords/view/edit_student_screen.dart';
+import 'package:studentrecords/view/student_details_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   void _logout(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Confirm Logout',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'Are you sure you want to logout and exit the app?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: AllColors.gradientThird,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog first
+    DialogUtils.showConfirmationDialog(
+      context,
+      title: 'Confirm Logout',
+      content: 'Are you sure you want to logout and exit the app?',
+      confirmText: 'Logout & Exit',
+      cancelText: 'Cancel',
+      confirmColor: AllColors.gradientSecond,
+      onConfirm: () async {
+        // Show loading dialog
+        DialogUtils.showLoadingDialog(context, message: 'Logging out...');
 
-                // Show loading indicator
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return const AlertDialog(
-                      content: Row(
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(width: 16),
-                          Text('Logging out...'),
-                        ],
-                      ),
-                    );
-                  },
-                );
+        try {
+          final authProvider = Provider.of<AuthProvider>(
+            context,
+            listen: false,
+          );
+          await authProvider.signOut();
 
-                try {
-                  // Get the AuthProvider and call signOut
-                  final authProvider = Provider.of<AuthProvider>(
-                    context,
-                    listen: false,
-                  );
-                  await authProvider.signOut();
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
 
-                  // Close loading dialog
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-
-                  // Exit the app after successful logout
-                  _exitApp();
-                } catch (e) {
-                  // Close loading dialog
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-
-                  // Show error message
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Logout failed: ${e.toString()}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text(
-                'Logout & Exit',
-                style: TextStyle(
-                  color: AllColors.gradientSecond,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ],
-        );
+          _exitApp();
+        } catch (e) {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+            DialogUtils.showErrorSnackBar(
+              context,
+              'Logout failed: ${e.toString()}',
+            );
+          }
+        }
       },
     );
   }
 
-  // Function to exit the app
   void _exitApp() {
-    SystemNavigator.pop(); // This will close the app on Android
+    SystemNavigator.pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    print(
-      ' HomeScreen build, students length: ${context.watch<StudentProvider>().students.length}',
-    );
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Student Records',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AllColors.primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () => _logout(context),
-            tooltip: 'Logout & Exit',
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AllColors.primaryColor,
+              AllColors.gradientSecond,
+              AllColors.gradientThird,
+            ],
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AllColors.gradientSecond,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddStudentScreen()),
-          );
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: Consumer<StudentProvider>(
-        builder: (context, provider, child) {
-          print('length: ${provider.students.length}');
-          if (provider.students.isEmpty) {
-            return const Center(child: Text("No students found."));
-          }
-
-          return ListView.builder(
-            itemCount: provider.students.length,
-            itemBuilder: (context, index) {
-              final student = provider.students[index];
-              return ListTile(
-                title: Text(student.name),
-                subtitle: Text("Reg No: ${student.regNo}"),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom App Bar
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        // Navigate to Edit screen and pass index
-                      },
+                    const Text(
+                      'Student Records',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        Provider.of<StudentProvider>(
-                          context,
-                          listen: false,
-                        ).deleteStudent(index);
-                      },
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () => _logout(context),
+                        tooltip: 'Logout & Exit',
+                      ),
                     ),
                   ],
                 ),
-              );
-            },
-          );
-        },
+              ),
+
+              // Student Count Header
+              Consumer<StudentProvider>(
+                builder: (context, provider, child) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Students',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${provider.students.length}',
+                            style: const TextStyle(
+                              color: AllColors.primaryColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // Student List
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: Consumer<StudentProvider>(
+                    builder: (context, provider, child) {
+                      if (provider.students.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.school_outlined,
+                                size: 80,
+                                color: AllColors.primaryColor.withOpacity(0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                "No students found",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AllColors.primaryColor.withOpacity(
+                                    0.7,
+                                  ),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: provider.students.length,
+                        itemBuilder: (context, index) {
+                          final student = provider.students[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Card(
+                              elevation: 8,
+                              shadowColor: AllColors.primaryColor.withOpacity(
+                                0.3,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => StudentDetailScreen(
+                                            student: student,
+                                            studentIndex: index,
+                                          ),
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.white,
+                                        AllColors.primaryColor.withOpacity(
+                                          0.05,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                AllColors.primaryColor,
+                                                AllColors.gradientSecond,
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              15,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              student.name.isNotEmpty
+                                                  ? student.name[0]
+                                                      .toUpperCase()
+                                                  : 'S',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        const SizedBox(width: 16),
+
+                                        // Student Info
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                student.name,
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AllColors.primaryColor,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.badge_outlined,
+                                                    size: 16,
+                                                    color: AllColors
+                                                        .gradientSecond
+                                                        .withOpacity(0.7),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    "Reg: ${student.regNo}",
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: AllColors
+                                                          .gradientSecond
+                                                          .withOpacity(0.8),
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // Action Buttons
+                                        Column(
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: AllColors.gradientSecond
+                                                    .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: IconButton(
+                                                icon: const Icon(
+                                                  Icons.edit_outlined,
+                                                  color:
+                                                      AllColors.gradientSecond,
+                                                ),
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) =>
+                                                              EditStudentScreen(
+                                                                student:
+                                                                    student,
+                                                                studentIndex:
+                                                                    index,
+                                                              ),
+                                                    ),
+                                                  );
+                                                },
+                                                iconSize: 20,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.withOpacity(
+                                                  0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete_outline,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed: () {
+                                                  DialogUtils.showDeleteStudentConfirmation(
+                                                    context,
+                                                    studentIndex: index,
+                                                    studentName: student.name,
+                                                  );
+                                                },
+                                                iconSize: 20,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AllColors.gradientSecond, AllColors.gradientThird],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AllColors.gradientSecond.withOpacity(0.4),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          tooltip: "Add new student",
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddStudentScreen()),
+            );
+          },
+          child: const Icon(Icons.add, color: Colors.white, size: 28),
+        ),
       ),
     );
   }
