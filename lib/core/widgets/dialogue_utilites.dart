@@ -126,10 +126,6 @@ class DialogUtils {
     );
   }
 
-  /// Shows a loading dialog
-  ///
-  /// [context] - BuildContext for showing dialog
-  /// [message] - Loading message (default: 'Loading...')
   static void showLoadingDialog(
     BuildContext context, {
     String message = 'Loading...',
@@ -154,9 +150,6 @@ class DialogUtils {
     );
   }
 
-  ///
-  /// [context] - BuildContext for showing snackbar
-  /// [message] - Success message
   static void showSuccessSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -167,8 +160,6 @@ class DialogUtils {
     );
   }
 
-  /// [context] - BuildContext for showing snackbar
-  /// [message] - Error message
   static void showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -179,9 +170,6 @@ class DialogUtils {
     );
   }
 
-  /// [context] - BuildContext for showing snackbar
-  /// [message] - Info message
-  /// [backgroundColor] - Background color (default: AllColors.gradientSecond)
   static void showInfoSnackBar(
     BuildContext context,
     String message, {

@@ -8,10 +8,9 @@ class CustomButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final double textSize;
   final double borderRadius;
-  final Color? backgroundColor; // New parameter for custom color
-  final Color? textColor; // New parameter for custom text color
-  final bool isOutlined; // New parameter for outlined style
-
+  final Color? backgroundColor;
+  final Color? textColor;
+  final bool isOutlined;
   const CustomButton({
     super.key,
     required this.text,

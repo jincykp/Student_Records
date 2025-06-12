@@ -357,7 +357,7 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: keyboardType, // you already had this
+      keyboardType: keyboardType,
       validator: validator,
       maxLines: maxLines,
       autovalidateMode: autovalidateMode, // added here

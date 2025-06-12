@@ -7,7 +7,7 @@ import 'package:studentrecords/core/widgets/sign_buttons.dart';
 import 'package:studentrecords/core/widgets/signup_formfileds.dart';
 import 'package:studentrecords/core/widgets/signup_validation.dart';
 import 'package:studentrecords/provider/auth_provider.dart';
-import 'package:studentrecords/view/auth/login_screen.dart';
+import 'package:studentrecords/view/auth_screens/login_screen.dart';
 import 'package:studentrecords/view/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
