@@ -24,6 +24,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final _regNoController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  // State variables
   bool _isLoading = false;
 
   @override
@@ -72,6 +73,13 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     }
   }
 
+  void _clearForm() {
+    _nameController.clear();
+    _ageController.clear();
+    _regNoController.clear();
+    _phoneController.clear();
+  }
+
   // Helper Methods
   bool _isDuplicateRegNo(List<StudentModel> students) {
     final regNo = _regNoController.text.trim().toLowerCase();
@@ -102,7 +110,35 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: !_isLoading,
-      child: Scaffold(extendBodyBehindAppBar: true, body: _buildBody()),
+      child: Scaffold(
+        appBar: _buildAppBar(),
+        extendBodyBehindAppBar: true,
+        body: _buildBody(),
+      ),
+    );
+  }
+
+  // UI Building Methods
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: const Text(
+        "Add Student",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Colors.white),
+      actions: [
+        IconButton(
+          onPressed: _isLoading ? null : _clearForm,
+          icon: const Icon(Icons.clear_all),
+          tooltip: 'Clear Form',
+        ),
+      ],
     );
   }
 
@@ -131,15 +167,15 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                       MediaQuery.of(context).size.height -
                       kToolbarHeight -
                       MediaQuery.of(context).padding.top -
-                      40,
+                      40, // Account for padding
                 ),
                 child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 20),
                       _buildWelcomeSection(),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 40),
                       _buildFormFields(),
                       const Spacer(),
                       const SizedBox(height: 20),
@@ -168,7 +204,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
           ),
           child: const Column(
             children: [
-              Icon(Icons.person_add, size: 45, color: Colors.white),
+              Icon(Icons.person_add, size: 48, color: Colors.white),
               SizedBox(height: 10),
               Text(
                 "Add New Student",
